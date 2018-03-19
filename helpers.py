@@ -16,19 +16,13 @@ def fixed_xor(input1, input2):
     return codecs.encode(c, 'hex')
 
 def probably_human_readable(b):
-    # ascii codes
-    numbers = range(48, 58)
-    lowercase = range(97, 123)
-    uppercase = range(65, 91)
-    space = [32]
-    #s = str(b)
-    #print(bytes(b)[0])
-    common = sum([1 if i in numbers or i in lowercase or i in uppercase or i in space else 0 for i in b])
-    #vowels = sum([1 if x.lower() in 'aeiou' else 0 for x in s])
-    #whitespaces = sum([1 if x == ' ' else 0 for x in s])
-    #slashes = sum([1 if x == '\\' else 0 for x in s])
-    #
-    return common >= len(b) * 0.7
+    most_common = 'etaoin shrdlu'
+    special_chars = '*\\{}&~()+^!'
+    s = str(bytes(b))
+    common = sum([1 if c.lower() in most_common else 0 for c in s])
+    special = sum([1 if c in special_chars else 0 for c in s])
+
+    return common >= 0.6 * len(b) and special < 0.1 * len(b)
 
 
 
@@ -37,15 +31,14 @@ def find_single_xor(in_bytestring):
         b = bytes([a ^ i for a in in_bytestring])
         string = str(b)
         if probably_human_readable(b):
-            print(i, string)
+            # print(i, string)
             return i
 
     raise Exception('no matching byte found')
 
 
-def xor_with_key(in_string, key):
-    encrypted = bytes([a ^ b for a, b in zip(in_string.encode(), itertools.cycle(key.encode()))])
-    return codecs.encode(encrypted, 'hex')
+def xor_with_key(in_bytestring, key):
+    return bytes([a ^ b for a, b in zip(in_bytestring, itertools.cycle(key))])
 
 
 def hamming_distance(a, b):
@@ -82,7 +75,9 @@ def break_repeating_key_xor(infile):
 
     solved = [find_single_xor(b) for b in transposed_bytes]
 
-    print(str(solved))
+    key = bytes(solved)
+    solution = xor_with_key(filetext, key)
+    print(str(solution))
 
 if __name__ == '__main__':
     break_repeating_key_xor('6.txt')
